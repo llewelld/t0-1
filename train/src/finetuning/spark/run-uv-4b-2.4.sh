@@ -6,9 +6,12 @@ JOB_NAME="t0-2.4-4b"
 # 1. USER CONFIGURATION
 # ==============================================================================
 
+export WORKSPACE="$HOME/ubuntu/t0"
+
+
 # Default values (override with sbatch --export=ALL,MODEL_NAME="...")
 : "${MODEL_NAME:="google/gemma-3-4b-it"}"
-: "${DATASET_PATH:="/home/rwood/split_2k-gpt-oss-120b-traces-k5_qwen_summarised_data_gemma_format"}"
+: "${DATASET_PATH:="${WORKSPACE}/dataset/t0_data/split_2k-gpt-oss-120b-traces-k5_qwen_summarised_data_gemma_format"}"
 : "${RUN_NAME:="t0-2.4-4b"}"
 : "${BLOCK_SIZE:=32768}"
 : "${EPOCHS:=1}"
@@ -19,9 +22,9 @@ JOB_NAME="t0-2.4-4b"
 # 2. SYSTEM & ENVIRONMENT
 # ==============================================================================
 
-UV_PATH="/home/rwood/t0-1/train/src/finetuning/venvs/t0_phase3"
-SCRIPT_PATH="/home/rwood/t0-1/train/s1_31a10f2/train/sft.py"
-export HF_HOME="/home/rwood/.cache/huggingface"
+UV_PATH="${WORKSPACE}/venvs/t0_phase3"
+SCRIPT_PATH="${WORKSPACE}/t0-1/train/s1_31a10f2/train/sft.py"
+export HF_HOME="${WORKSPACE}/hf_cache"
 
 
 # ==============================================================================
@@ -93,7 +96,7 @@ bash -c "
     --bf16=True \
     --eval_strategy='steps' \
     --eval_steps=50 \
-    --logging_steps=1 \
+    --logging_steps=128 \
     --save_steps=500 \
     --lr_scheduler_type cosine \
     --learning_rate $LR \
@@ -110,6 +113,6 @@ bash -c "
     --report_to none \
     --lora=False \
     --eval_accumulation_steps=1
-"
+" 2>&1 | tee -a "logs-4b/${JOB_NAME}-stdout-${uid}.txt"
 
 echo "Training finished."
